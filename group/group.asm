@@ -2,6 +2,7 @@ section .data
 	file DD "data.txt"
 section .bss
 	buffer: resb 1024
+	st: resb 1024
 section .text
 
 global main
@@ -17,9 +18,13 @@ main:
 	mov rdx, 1024	;size
 	syscall
 
+	mov rax, 5	;fstat
+	mov rsi, st	;into st
+	syscall
+
 	mov rax, 1	;write
 	mov rdi, 1	;stdout
-	mov rcx, buffer ;from buffer
+	mov rsi, buffer ;from buffer
 	mov rdx, 30	;size
 	syscall
 
