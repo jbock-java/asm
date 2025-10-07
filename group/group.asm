@@ -14,14 +14,24 @@ section .text
 
 global main
 
+exit:
+	mov	rax, 60
+	mov	rdi, 0
+	syscall
+	ret
+
+print_ln:
+	mov	rax, 1		;write
+	mov	rdi, 1		;stdout
+	push	10		;\n
+	push	rsp		;push leaves RSP pointing to the data that was pushed
+	pop	rsi		;copy RSP to RSI
+	mov	rdx, 1		;size
+	syscall
+	add	rsp, 4		;pop
+	ret
+
 main:
-;	mov	rax, 1		;write
-;	mov	rdi, 1		;stdout
-;	push	10		;\n
-;	push	rsp		;push leave RSP pointing to the data that was pushed
-;	pop	rsi		;copy RSP to RSI
-;	mov	rdx, 1		;size
-;	syscall
 
 	mov	rax, 2		;open
 	mov	rdi, file	;filename
@@ -41,6 +51,4 @@ main:
 	mov	rdx, st + 48	;offset of st_size
 	syscall
 
-	mov	rax, 60		;exit
-	mov	rdi, 0		;status
-	syscall
+	call	exit
