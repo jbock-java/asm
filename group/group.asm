@@ -1,5 +1,12 @@
 section .data
-	file DD "data.txt"
+	file dd "data.txt"
+	mmap_arg:
+	  .addr:   dd 0
+	  .len:    dd 512
+	  .prot:   dd 3
+	  .flags:  dd 34
+	  .fd:     dd -1
+	  .offset: dd 0
 section .bss
 	buffer: resb 1024
 	st: resb 1024
