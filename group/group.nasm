@@ -10,15 +10,15 @@ section .text
 global main
 
 do_mmap:
-        mov	rax, 9		;mmap
-        mov	rdi, 0		;addr
-        mov	rdx, 3		;prot r=1 w=2
-        mov	rsi, [siz] 	;len
-        mov	r8, -1		;fd
-        mov	r9, 0		;offset
-        mov	r10, 34		;flags map_private=0x02, map_anonymous=0x20
+	mov	rax, 9		;mmap
+	mov	rdi, 0		;addr
+	mov	rdx, 3		;prot r=1 w=2
+	mov	rsi, [siz]	;len
+	mov	r8, -1		;fd
+	mov	r9, 0		;offset
+	mov	r10, 34		;flags map_private=0x02, map_anonymous=0x20
 	syscall
-        ret
+	ret
 
 exit:
 	mov	rax, 60
@@ -89,7 +89,7 @@ main:
 
 	mov	rax, 11		;munmap
 	mov	rdi, buffer	;buffer
-        mov	rsi, [siz] 	;len
+	mov	rsi, [siz] 	;len
 	syscall
 
 	call	exit
