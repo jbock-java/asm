@@ -1,9 +1,9 @@
 default:
-	nasm -f elf64 group.asm -o group.o
-	gcc -no-pie group.o -o group -g
+	nasm -f elf64 cat.nasm -o cat.o
+	gcc -no-pie cat.o -o cat -g
 
 test:
-	@./group | md5sum | grep -q ^06aa985f3 && printf "\033[1;32m[OK]\033[0m\n"
+	@./cat | md5sum | grep -q ^06aa985f3 && printf "\033[1;32m[OK]\033[0m\n"
 
 clean:
-	@rm -f group.o group
+	@rm -f cat.o cat
