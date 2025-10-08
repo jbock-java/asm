@@ -1,13 +1,13 @@
-section .data
-	siz:			dq 0
-	fh:			dq 0
-	buffer:			dq 0
-	file:			db "data.txt"
-section .bss
-	st:			resq 1024 ; > sizeof(struct stat)
-section .text
+.data
+	siz:			.quad 0
+	fh:			.quad 0
+	buffer:			.quad 0
+	file:			.asciz "data.txt"
+.bss
+	.lcomm st, 1024
+.text
 
-global main
+.globl main
 
 do_mmap:
 	mov	rax, 9		;mmap
