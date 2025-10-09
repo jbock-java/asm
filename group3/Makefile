@@ -1,6 +1,6 @@
 default:
-	as -msyntax=intel group3.S -o group3.o
-	gcc -no-pie group3.o -o group3 -g
+	$(CC) group3.S -c -g
+	$(LD) -o group3 group3.o
 
 clean:
 	@rm -f group3.o group3

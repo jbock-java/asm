@@ -3,10 +3,11 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+int fh = 0;
+
 int main(int argc, char *argv[])
 {
-	void *signbuf = malloc(4096);
-	printf("%p\n", signbuf);
-	free(signbuf);
+	fh = 3;
+	printf("%d\n", fh);
 	return 0;
 }
