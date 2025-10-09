@@ -4,25 +4,27 @@
 .equ WRITE, 1
 .equ OPEN, 2
 .equ FSTAT, 5
-.equ EXIT, 1
+.equ EXIT, 60
 .equ MMAP, 9
 .equ MUNMAP, 11
 .equ OFFSET_SIZE, 48
-	.text
-	.globl	fh
-	.bss
+
+.data
 
 fh:
-	.zero	4
-	.section	.rodata
+	.quad	0
 buffer:
 	.quad	0
+st:
+	.zero	1024
+
+.section .rodata
+
 file:
 	.asciz	"data.txt"
-st:
-	.skip	1024
 
 .text
+
 .globl _start
 
 _mmap:
@@ -35,8 +37,7 @@ _mmap:
 	movq	$0, %r9		#offset
 	movq	$34, %r10	#flags map_private=0x02, map_anonymous=0x20
 	syscall
-	movq	$buffer, %rbx
-	movq	%rax, (%rbx)	#store buffer
+	movq	%rax, buffer(%rip)	#store buffer
 	ret
 
 _exit:
@@ -45,7 +46,7 @@ _exit:
 	syscall
 	ret
 
-print:
+_print:
 	movq	$WRITE, %rax
 	pushq	%rdi		#print contents of rdi
 	movq	$STDOUT, %rdi
@@ -56,74 +57,72 @@ print:
 	popq	%rdi
 	ret
 
-print_ouch:
+_print_ouch:
 	movq	$0x4f, %rdi
-	call	print
+	call	_print
 	movq	$0x55, %rdi
-	call	print
+	call	_print
 	movq	$0x43, %rdi
-	call	print
+	call	_print
 	movq	$0x48, %rdi
-	call	print
+	call	_print
 	movq	$0x21, %rdi
-	call	print
+	call	_print
 	movq	$0xa, %rdi
-	call	print
+	call	_print
 	ret
 
 _open:
 	movq	$OPEN, %rax
-	movq	$file, %rdi 	#filename
-	movq	$0, %rsi	#readonly
-	movq	$0644, %rdx 	#mode
+	movq	$file, %rdi 		#filename
+	movq	$0, %rsi		#readonly
+	movq	$0644, %rdx 		#mode
 	syscall
-	movq	%rax, fh(%rip)	#store fh
+	movq	%rax, fh(%rip)		#store fh
 	ret
 
 _stat:
 	movq	$FSTAT, %rax
-	movq	(fh), %rdi	#load fh
-	movq	$st, %rsi	#into st
+	movq	fh(%rip), %rdi		#load fh
+	leaq	st, %rsi		#into st
 	syscall
 	ret
 
 _read:
 	movq	$READ, %rax
-	movq	(fh), %rdi 	#load fh
-	movq	$buffer, %rsi	#into buffer
-	movq	$st, %rbx	#store size
-	movq	48(%rbx), %rdx 	#size
+	movq	fh(%rip), %rdi 		#int fd
+	movq	buffer(%rip), %rsi	#char *buf
+	leaq	st, %rbx
+	movq	48(%rbx), %rdx 		#len
 	syscall
 	ret
 
 _write:
 	movq	$WRITE, %rax
-	movq	$STDOUT, %rdi
-	movq	$buffer, %rsi	#from buffer
-	movq	$st, %rbx
-	movq	48(%rbx), %rdx 	#size
+	movq	$STDOUT, %rdi		#int fd
+	movq	buffer(%rip), %rsi	#char *buf
+	leaq	st, %rbx
+	movq	48(%rbx), %rdx 		#len
 	syscall
 	ret
 
 _close:
-	movq	$CLOSE, %rax	#close
-	movq	(fh), %rdi 	#fh
+	movq	$CLOSE, %rax		#close
+	leaq	fh, %rdi 		#fh
 	syscall
 	ret
 
 _munmap:
-	movq	$MUNMAP, %rax	#munmap
-	movq	$buffer, %rdi 	#buffer
-	movq	$st, %rbx
-	movq	48(%rbx), %rsi 	#size
+	movq	$MUNMAP, %rax		#munmap
+	leaq	buffer, %rdi 		#buffer
+	leaq	st, %rbx
+	movq	48(%rbx), %rsi 		#len
 	syscall
 	ret
 
 _start:
 	pushq	%rbp
 	movq	%rsp, %rbp
-
-	movq	$3, fh(%rip)
 
 	call	_open
 	call	_stat
@@ -133,3 +132,4 @@ _start:
 	call	_close
 	call	_munmap
 	call	_exit
+	leave
