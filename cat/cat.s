@@ -129,8 +129,6 @@ _start:
 	pushq	%rbp
 	movq	%rsp, %rbp
 
-	call	_print_ouch
-
 	call	_open
 	call	_stat
 	call	_mmap
@@ -138,6 +136,7 @@ _start:
 	call	_write
 	call	_close
 	call	_munmap
+	call	_exit
 
 	call	_print_ouch
 

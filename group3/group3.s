@@ -8,34 +8,40 @@
 .equ MMAP, 9
 .equ MUNMAP, 11
 .equ OFFSET_SIZE, 48
+.equ CHAR_O, 0x4f
+.equ CHAR_U, 0x55
+.equ CHAR_C, 0x43
+.equ CHAR_H, 0x48
+.equ BANG, 0x21
+.equ NEWLINE, 0xa
 
-.data
+	.data
 
 fh:
 	.quad	0
 buffer:
 	.quad	0
+siz:
+	.quad	0
 st:
 	.zero	1024
 
-.section .rodata
+	.section .rodata
 
 file:
 	.asciz	"data.txt"
 
-.text
-
-.globl _start
+	.text
+	.globl _start
 
 _mmap:
 	movq	$MMAP, %rax
-	movq	$0, %rdi	#addr
-	movq	$3, %rdx	#prot r=1 w=2
-	leaq	st, %rbx
-	movq	48(%rbx), %rsi 	#len
-	movq	$-1, %r8	#fd
-	movq	$0, %r9		#offset
-	movq	$34, %r10	#flags map_private=0x02, map_anonymous=0x20
+	movq	$0, %rdi		#addr
+	movq	$3, %rdx		#prot r=1 w=2
+	movq	siz(%rip), %rsi 	#len
+	movq	$-1, %r8		#fd
+	movq	$0, %r9			#offset
+	movq	$34, %r10		#flags map_private=0x02, map_anonymous=0x20
 	syscall
 	movq	%rax, buffer(%rip)	#store buffer
 	ret
@@ -48,27 +54,27 @@ _exit:
 
 _print:
 	movq	$WRITE, %rax
-	pushq	%rdi		#print contents of rdi
+	pushq	%rdi			#print contents of rdi
 	movq	$STDOUT, %rdi
-	pushq	%rsp		#push leaves RSP pointing to the data that was pushed
-	popq	%rsi		#copy RSP to RSI
-	movq	$1, %rdx	#size
+	pushq	%rsp			#push leaves RSP pointing to the data that was pushed
+	popq	%rsi			#copy RSP to RSI
+	movq	$1, %rdx		#size
 	syscall
 	popq	%rdi
 	ret
 
 _print_ouch:
-	movq	$0x4f, %rdi
+	movq	$CHAR_O, %rdi
 	call	_print
-	movq	$0x55, %rdi
+	movq	$CHAR_U, %rdi
 	call	_print
-	movq	$0x43, %rdi
+	movq	$CHAR_C, %rdi
 	call	_print
-	movq	$0x48, %rdi
+	movq	$CHAR_H, %rdi
 	call	_print
-	movq	$0x21, %rdi
+	movq	$BANG, %rdi
 	call	_print
-	movq	$0xa, %rdi
+	movq	$NEWLINE, %rdi
 	call	_print
 	ret
 
@@ -86,14 +92,15 @@ _stat:
 	movq	fh(%rip), %rdi		#load fh
 	leaq	st, %rsi		#into st
 	syscall
+	movq	48(%rsi), %rbx		#store size
+	movq	%rbx, siz(%rip)
 	ret
 
 _read:
 	movq	$READ, %rax
 	movq	fh(%rip), %rdi 		#int fd
 	movq	buffer(%rip), %rsi	#char *buf
-	leaq	st, %rbx
-	movq	48(%rbx), %rdx 		#len
+	movq	siz(%rip), %rdx 	#len
 	syscall
 	ret
 
@@ -101,8 +108,7 @@ _write:
 	movq	$WRITE, %rax
 	movq	$STDOUT, %rdi		#int fd
 	movq	buffer(%rip), %rsi	#char *buf
-	leaq	st, %rbx
-	movq	48(%rbx), %rdx 		#len
+	movq	siz(%rip), %rdx 	#len
 	syscall
 	ret
 
@@ -115,8 +121,7 @@ _close:
 _munmap:
 	movq	$MUNMAP, %rax		#munmap
 	leaq	buffer, %rdi 		#buffer
-	leaq	st, %rbx
-	movq	48(%rbx), %rsi 		#len
+	movq	siz(%rip), %rsi 	#len
 	syscall
 	ret
 
@@ -132,4 +137,3 @@ _start:
 	call	_close
 	call	_munmap
 	call	_exit
-	leave

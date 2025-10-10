@@ -1,5 +1,5 @@
 default:
-	$(CC) group3.S -c -g
+	$(CC) group3.s -c -g
 	$(LD) -o group3 group3.o
 
 clean:
