@@ -17,11 +17,7 @@
 	.equ	BANG, 0x21
 	.equ	NEWLINE, 0xa
 
-
 	.data
-
-my_number:
-	.quad 0x41
 
 	.text
 	.globl _start
@@ -33,58 +29,42 @@ print_chars:
 	syscall
 	ret
 
-# void print_int_h(int {rsi});
-# 	Prints hexadecimal value in {rsi} to stdout.
-_print_int_h:
+# Prints hexadecimal value in rsi to stdout.
+print_int:
 	push	%rax
 	push	%rbp
 	push	%rsi
 	push	%rdx
-
-	mov	%rsp, %rbp 	# save base stack pointer
-
-	# value is kept in {rsi} and low bits are shifted off, four by four
-	# do all arithmetic in {rax}
-
-	# move trailing '\n' onto stack
-	push	$0xa
-
-_loop:
-
-	mov	%sil, %al	#
-	and	$15, %al	# %al contains low nibble of %rsi
-	add	$48, %al	# %al now correctly contains ascii "0"-"9"
-	cmp	$57, %al	#
-	jle	_insert_byte
-	add	$39, %al	# adjust %al for ascii "a"-"f"
-_insert_byte:
-	dec	%rsp
-	mov	%al, (%rsp)	# move this ascii value into next slot on stack
-	shr	$4, %rsi	# go on to next lowest bit
-	test	 %rsi, %rsi	# loop until nothing nonzero left
-	jnz	_loop
-
-	# move leading '0x' onto stack
-	push	$0x78		#x
-	push	$0x30		#0
-
-	# get ready to print
-	mov	%rbp, %rdx	##
-	sub	%rsp, %rdx	## %rdx will be length of number in bytes
-	mov	%rsp, %rsi	## address of top of stack
-	call	print_chars	## print out bytes
-	mov	%rbp, %rsp 	## restore stack pointer
-
+	mov	%rsp, %rbp 	# save stack pointer
+	push	$0xa		# "\n"
+print_int_loop:
+	mov	%rsi, %rax
+	and	$15, %rax
+	add	$48, %rax	# %rax now contains ascii "0"-"9"
+	cmp	$57, %rax
+	jle	print_int_after_adjust
+	add	$39, %rax	# adjust for ascii "a"-"f"
+print_int_after_adjust:
+	push	%rax
+	shr	$4, %rsi
+	test	%rsi, %rsi
+	jnz	print_int_loop
+	push	$0x78		# "x"
+	push	$0x30		# "0"
+	mov	%rsp, %rsi
+	mov	%rbp, %rdx
+	sub	%rsp, %rdx	# print from rsp to rbp
+	call	print_chars
+	mov	%rbp, %rsp 	# restore stack pointer
 	pop	%rdx
 	pop	%rsi
 	pop	%rbp
 	pop	%rax
-
 	ret
 
 _start:
-	mov	my_number, %rsi
-	call	_print_int_h
+	mov	$0xdeadbeef, %rsi
+	call	print_int
 	jmp	_exit
 
 _exit:
