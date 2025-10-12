@@ -6,19 +6,22 @@
 
 .text
 
+# void print_chars(int {rsi}, int {rdx});
+print_chars:
+	movq	$1, %rax
+	movq	$1, %rdi
+	syscall
+	ret
+
 _start:
 	#https://stackoverflow.com/questions/29790175/assembly-x86-leave-instruction
 	pushq	%rbp
 	movq	%rsp, %rbp
 
-	movq	$1, %rax
-	movq	$1, %rdi
 	leaq	.hello.str, %rsi
 	movq	$10, %rdx
-	syscall
+	call	print_chars
 
 	movq	$60, %rax
 	movq	$0, %rdi
 	syscall
-
-	leave

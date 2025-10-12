@@ -137,7 +137,3 @@ _start:
 	call	_close
 	call	_munmap
 	call	_exit
-
-	call	_print_ouch
-
-	leave
