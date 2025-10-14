@@ -22,7 +22,7 @@
 	.text
 	.globl _start
 
-# void print_chars(char *rsi, int rdx);
+# char *rsi, int rdx;
 print_chars:
 	movq	$WRITE, %rax
 	movq	$STDOUT, %rdi
@@ -35,8 +35,11 @@ print_int:
 	push	%rbp
 	push	%rsi
 	push	%rdx
+	push	%rcx
 	mov	%rsp, %rbp 	# save stack pointer
-	push	$0xa		# "\n"
+	mov	$0, %rcx
+	movb	$0xa, -64(%rbp, %rcx)
+	inc	%rcx
 print_int_loop:
 	mov	%rsi, %rax
 	and	$15, %rax
@@ -45,17 +48,21 @@ print_int_loop:
 	jle	print_int_after_adjust
 	add	$39, %rax	# adjust for ascii "a"-"f"
 print_int_after_adjust:
-	push	%rax
+	movb	%al, -64(%rbp, %rcx)
+	inc	%rcx
 	shr	$4, %rsi
 	test	%rsi, %rsi
 	jnz	print_int_loop
-	push	$0x78		# "x"
-	push	$0x30		# "0"
-	mov	%rsp, %rsi
-	mov	%rbp, %rdx
-	sub	%rsp, %rdx	# print from rsp to rbp
+	movb	$0x78, -64(%rbp, %rcx)
+	inc	%rcx
+	movb	$0x30, -64(%rbp, %rcx)
+	inc	%rcx
+	leaq	-64(%rbp), %rsi
+	mov	%rcx, %rdx	# len
+le_print:
 	call	print_chars
 	mov	%rbp, %rsp 	# restore stack pointer
+	pop	%rcx
 	pop	%rdx
 	pop	%rsi
 	pop	%rbp

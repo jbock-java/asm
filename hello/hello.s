@@ -1,27 +1,27 @@
-#https://www.youtube.com/watch?v=3nYHV5zIQGA
-.globl _start
-
-.hello.str:
-	.asciz "12345678\n"
-
-.text
-
-# void print_chars(int {rsi}, int {rdx});
-print_chars:
-	movq	$1, %rax
-	movq	$1, %rdi
-	syscall
-	ret
-
+	.text
+	.globl	_start
 _start:
-	#https://stackoverflow.com/questions/29790175/assembly-x86-leave-instruction
 	pushq	%rbp
 	movq	%rsp, %rbp
+	movb	$48, -11(%rbp)
+	movb	$120, -10(%rbp)
+	movb	$100, -9(%rbp)
+	movb	$101, -8(%rbp)
+	movb	$97, -7(%rbp)
+	movb	$100, -6(%rbp)
+	movb	$98, -5(%rbp)
+	movb	$101, -4(%rbp)
+	movb	$101, -3(%rbp)
+	movb	$102, -2(%rbp)
+	movb	$10, -1(%rbp)
+	mov	$11, %rdx
+	leaq	-11(%rbp), %rsi
+	mov	$1, %rdi
+	mov	$1, %rax
+	syscall
+	jmp	exit
 
-	leaq	.hello.str, %rsi
-	movq	$10, %rdx
-	call	print_chars
-
+exit:
 	movq	$60, %rax
 	movq	$0, %rdi
 	syscall
