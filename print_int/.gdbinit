@@ -3,4 +3,4 @@ lay asm
 define hook-quit
 	set confirm off
 end
-break le_print
+break print_int_pop_loop

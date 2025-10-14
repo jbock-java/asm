@@ -6,6 +6,8 @@
 
 [x86 assembly language](https://en.wikipedia.org/wiki/X86_assembly_language)
 
+[What is stack frame](https://stackoverflow.com/questions/3699283/what-is-stack-frame-in-assembly)
+
 ```
 /usr/include/asm-generic/fcntl.h
 ```
