@@ -22,14 +22,14 @@
 	.text
 	.globl _start
 
-# char *rsi, int rdx;
-print_chars:
-	movq	$WRITE, %rax
-	movq	$STDOUT, %rdi
+# char *rsi, int rdx
+write_string:
+	mov	$WRITE, %rax
+	mov	$STDOUT, %rdi
 	syscall
 	ret
 
-# Prints hexadecimal value in rsi to stdout.
+# int rsi
 print_int:
 	push	%rax
 	push	%rbp
@@ -38,9 +38,9 @@ print_int:
 	push	%rcx
 	mov	%rsp, %rbp 	# save stack pointer
 	mov	$0, %rcx
-	movb	$0xa, -64(%rbp, %rcx)
+	push	$0xa		# "\n"
 	inc	%rcx
-print_int_loop:
+print_int_push_loop:
 	mov	%rsi, %rax
 	and	$15, %rax
 	add	$48, %rax	# %rax now contains ascii "0"-"9"
@@ -48,19 +48,26 @@ print_int_loop:
 	jle	print_int_after_adjust
 	add	$39, %rax	# adjust for ascii "a"-"f"
 print_int_after_adjust:
-	movb	%al, -64(%rbp, %rcx)
+	push	%rax
 	inc	%rcx
 	shr	$4, %rsi
 	test	%rsi, %rsi
-	jnz	print_int_loop
-	movb	$0x78, -64(%rbp, %rcx)
+	jnz	print_int_push_loop
+	push	$0x78		# "x"
 	inc	%rcx
-	movb	$0x30, -64(%rbp, %rcx)
+	push	$0x30		# "0"
 	inc	%rcx
-	leaq	-64(%rbp), %rsi
-	mov	%rcx, %rdx	# len
-le_print:
-	call	print_chars
+	mov	$0, %rdx
+print_int_pop_loop:		# copy chars from stack
+	pop	%rax
+	movb	%al, -128(%rbp, %rdx)
+	inc	%rdx
+	cmp	%rsp, %rbp
+	jne	print_int_pop_loop
+	lea	-128(%rbp), %rsi
+	mov	%rcx, %rdx
+	call	write_string
+
 	mov	%rbp, %rsp 	# restore stack pointer
 	pop	%rcx
 	pop	%rdx
