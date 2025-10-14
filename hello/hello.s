@@ -3,17 +3,29 @@
 _start:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movb	$48, -11(%rbp)
-	movb	$120, -10(%rbp)
-	movb	$100, -9(%rbp)
-	movb	$101, -8(%rbp)
-	movb	$97, -7(%rbp)
-	movb	$100, -6(%rbp)
-	movb	$98, -5(%rbp)
-	movb	$101, -4(%rbp)
-	movb	$101, -3(%rbp)
-	movb	$102, -2(%rbp)
-	movb	$10, -1(%rbp)
+	mov	$0, %rcx
+	movb	$0x30, -11(%rbp, %rcx)		# "0"
+	inc	%rcx
+	movb	$0x78, -11(%rbp, %rcx)		# "x"
+	inc	%rcx
+	movb	$0x64, -11(%rbp, %rcx)		# "d"
+	inc	%rcx
+	movb	$0x65, -11(%rbp, %rcx)		# "e"
+	inc	%rcx
+	movb	$0x61, -11(%rbp, %rcx)		# "a"
+	inc	%rcx
+	movb	$0x64, -11(%rbp, %rcx)		# "d"
+	inc	%rcx
+	movb	$0x62, -11(%rbp, %rcx)		# "b"
+	inc	%rcx
+	movb	$0x65, -11(%rbp, %rcx)		# "e"
+	inc	%rcx
+	movb	$0x65, -11(%rbp, %rcx)		# "e"
+	inc	%rcx
+	movb	$0x66, -11(%rbp, %rcx)		# "f"
+	inc	%rcx
+	movb	$0xa, -11(%rbp, %rcx)
+	inc	%rcx
 	mov	$11, %rdx
 	leaq	-11(%rbp), %rsi
 	mov	$1, %rdi

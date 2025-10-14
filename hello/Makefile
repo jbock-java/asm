@@ -1,9 +1,9 @@
-default:
-	$(CC) hello.s -c -g
+build:
+	$(CC) hello.s -c
 	$(LD) -o hello hello.o
 
-check:
+check: build
 	./hello | md5sum | grep -q ^823c843e5 && printf "\033[1;32m[OK]\033[0m\n"
 
-run:
-	./hello
+clean:
+	rm -f hello
