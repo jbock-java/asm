@@ -18,11 +18,15 @@ print_char:
 	push	%rdx
 	push	%rsi
 	push	%rdi
-	mov	$WRITE, %rax
-	mov	%rdi, -128(%rbp)
+	mov	16(%rbp), %rax
+	movb	$0x3e, -128(%rbp)
+	mov	%rax, -127(%rbp)
+	movb	$0x3c, -126(%rbp)
+	movb	$0xa, -125(%rbp)
 	lea	-128(%rbp), %rsi
+	mov	$WRITE, %rax
 	mov	$STDOUT, %rdi
-	mov	$1, %rdx
+	mov	$4, %rdx
 	syscall
 	pop	%rdi
 	pop	%rsi
@@ -42,14 +46,17 @@ write_string:
 
 # int rsi
 print_int:
-	push	%rax
 	push	%rbp
+	mov	%rsp, %rbp
+	sub	$128, %rsp
+
+	push	%rax
 	push	%rsi
 	push	%rdx
 	push	%rcx
 	push	%rdi
-	mov	%rsp, %rbp 	# save stack pointer
 
+	mov	16(%rbp), %rsi
 	mov	$0, %rcx
 
 print_int_push_loop:
@@ -60,7 +67,7 @@ print_int_push_loop:
 	jle	print_int_after_adjust
 	add	$39, %rax	# adjust for ascii "a"-"f"
 print_int_after_adjust:
-	#movb	%al, -64(%rbp, %rcx)	#to do: use this instead of push
+	movb	%al, -64(%rbp, %rcx)	#to do: use this instead of push
 	push	%rax
 	inc	%rcx
 	shr	$4, %rsi
@@ -78,10 +85,13 @@ print_int_after_adjust:
 	inc	%rdx
 
 print_int_pop_loop:		# copy chars from stack
-	pop	%rax
 
-	mov	%rax, %rdi
+	#mov	-64(%rbp, %rdx), %rax
+	#push	%rax
 	#call	print_char
+	#pop	%rax
+
+	pop	%rax
 
 	movb	%al, -128(%rbp, %rdx)
 	inc	%rdx
@@ -93,20 +103,25 @@ print_int_pop_loop:		# copy chars from stack
 
 	lea	-128(%rbp), %rsi
 	call	write_string
-	mov	%rbp, %rsp 	# restore stack pointer
+
 	pop	%rdi
 	pop	%rcx
 	pop	%rdx
 	pop	%rsi
-	pop	%rbp
 	pop	%rax
+
+	mov	%rbp, %rsp
+	pop	%rbp
+
 	ret
 
 main:
-	mov	$0x9084, %rsi
-	shl	$16, %rsi
-	add	$0xa412, %rsi
+	mov	$0x9084, %rax
+	shl	$16, %rax
+	add	$0xa412, %rax
+	push	%rax
 	call	print_int
+	pop	%rsi
 	jmp	exit
 
 exit:
