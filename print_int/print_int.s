@@ -4,13 +4,10 @@
 	.equ	WRITE, 1
 	.equ	EXIT, 60
 
-	.data
-
 	.text
 	.globl main
 
-# char rdi
-print_char:
+print_char:					# debugging
 	push	%rbp
 	mov	%rsp, %rbp
 	push	%rax
@@ -44,7 +41,6 @@ write_string:
 	syscall
 	ret
 
-# int rsi
 print_int:
 	push	%rbp
 	mov	%rsp, %rbp
@@ -62,41 +58,31 @@ print_int:
 print_int_push_loop:
 	mov	%rsi, %rax
 	and	$0xf, %rax
-	add	$0x30, %rax	# %rax now contains ascii "0"-"9"
+	add	$0x30, %rax			# %rax now contains ascii "0"-"9"
 	cmp	$0x39, %rax
 	jle	print_int_after_adjust
-	add	$39, %rax	# adjust for ascii "a"-"f"
+	add	$39, %rax			# adjust for ascii "a"-"f"
 print_int_after_adjust:
-	movb	%al, -64(%rbp, %rcx)	#to do: use this instead of push
-	push	%rax
+	movb	%al, -64(%rbp, %rcx)
 	inc	%rcx
 	shr	$4, %rsi
 	test	%rsi, %rsi
 	jnz	print_int_push_loop
 
-	add	$2, %rcx
-
 	mov	$0, %rdx
 
 	movb	$0x30, -128(%rbp, %rdx)
 	inc	%rdx
-
 	movb	$0x78, -128(%rbp, %rdx)
 	inc	%rdx
 
-print_int_pop_loop:		# copy chars from stack
-
-	#mov	-64(%rbp, %rdx), %rax
-	#push	%rax
-	#call	print_char
-	#pop	%rax
-
-	pop	%rax
-
+print_int_pop_loop:
+	dec	%rcx
+	mov	-64(%rbp, %rcx), %rax
 	movb	%al, -128(%rbp, %rdx)
 	inc	%rdx
-	cmp	%rdx, %rcx
-	jne	print_int_pop_loop
+	test	%rcx, %rcx
+	jnz	print_int_pop_loop
 
 	movb	$0xa, -128(%rbp, %rdx)
 	inc	%rdx
@@ -121,7 +107,6 @@ main:
 	add	$0xa412, %rax
 	push	%rax
 	call	print_int
-	pop	%rsi
 	jmp	exit
 
 exit:
