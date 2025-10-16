@@ -28,8 +28,8 @@
 	.globl main
 
 print_char:					# debugging
-	push	%rbp
-	mov	%rsp, %rbp
+	frame_enter
+	sys_enter
 	push	%rax
 	push	%rcx
 	push	%rdx
@@ -37,7 +37,7 @@ print_char:					# debugging
 	push	%rdi
 	mov	16(%rbp), %rax
 	movb	$0x3e, -128(%rbp)
-	mov	%rax, -127(%rbp)
+	movb	%al, -127(%rbp)
 	movb	$0x3c, -126(%rbp)
 	movb	$0xa, -125(%rbp)
 	lea	-128(%rbp), %rsi
@@ -50,8 +50,8 @@ print_char:					# debugging
 	pop	%rdx
 	pop	%rcx
 	pop	%rax
-	mov	%rbp, %rsp
-	pop	%rbp
+	sys_leave
+	frame_leave
 	ret
 
 # char *rsi, int rdx
