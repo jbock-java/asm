@@ -1,19 +1,39 @@
-.equ READ, 0
-.equ STDOUT, 1
-.equ CLOSE, 3
-.equ WRITE, 1
-.equ OPEN, 2
-.equ FSTAT, 5
-.equ EXIT, 60
-.equ MMAP, 9
-.equ MUNMAP, 11
-.equ OFFSET_SIZE, 48
-.equ CHAR_O, 0x4f
-.equ CHAR_U, 0x55
-.equ CHAR_C, 0x43
-.equ CHAR_H, 0x48
-.equ BANG, 0x21
-.equ NEWLINE, 0xa
+	.equ READ, 0
+	.equ STDOUT, 1
+	.equ CLOSE, 3
+	.equ WRITE, 1
+	.equ OPEN, 2
+	.equ FSTAT, 5
+	.equ EXIT, 60
+	.equ MMAP, 9
+	.equ MUNMAP, 11
+	.equ OFFSET_SIZE, 48
+	.equ CHAR_O, 0x4f
+	.equ CHAR_U, 0x55
+	.equ CHAR_C, 0x43
+	.equ CHAR_H, 0x48
+	.equ BANG, 0x21
+	.equ NEWLINE, 0xa
+
+	.macro sys_enter
+	push	%rcx
+	push	%r11
+	.endm
+
+	.macro sys_leave
+	pop	%r11
+	pop	%rcx
+	.endm
+
+	.macro frame_enter
+	push	%rbp
+	mov	%rsp, %rbp
+	.endm
+
+	.macro frame_leave
+	mov	%rbp, %rsp
+	pop	%rbp
+	.endm
 
 	.data
 
@@ -32,9 +52,9 @@ file:
 	.asciz	"data.txt"
 
 	.text
-	.globl _start
+	.globl main
 
-_mmap:
+mmap:
 	movq	$MMAP, %rax
 	movq	$0, %rdi		#addr
 	movq	$3, %rdx		#prot r=1 w=2
@@ -46,13 +66,13 @@ _mmap:
 	movq	%rax, buffer(%rip)	#store buffer
 	ret
 
-_exit:
+exit:
 	movq	$EXIT, %rax
 	movq	$0, %rdi
 	syscall
 	ret
 
-_print:
+print:
 	movq	$WRITE, %rax
 	pushq	%rdi			#print contents of rdi
 	movq	$STDOUT, %rdi
@@ -63,22 +83,22 @@ _print:
 	popq	%rdi
 	ret
 
-_print_ouch:
+print_ouch:
 	movq	$CHAR_O, %rdi
-	call	_print
+	call	print
 	movq	$CHAR_U, %rdi
-	call	_print
+	call	print
 	movq	$CHAR_C, %rdi
-	call	_print
+	call	print
 	movq	$CHAR_H, %rdi
-	call	_print
+	call	print
 	movq	$BANG, %rdi
-	call	_print
+	call	print
 	movq	$NEWLINE, %rdi
-	call	_print
+	call	print
 	ret
 
-_open:
+open:
 	movq	$OPEN, %rax
 	movq	$file, %rdi 		#filename
 	movq	$0, %rsi		#readonly
@@ -87,7 +107,7 @@ _open:
 	movq	%rax, fh(%rip)		#store fh
 	ret
 
-_stat:
+stat:
 	movq	$FSTAT, %rax
 	movq	fh(%rip), %rdi		#load fh
 	leaq	st, %rsi		#into st
@@ -96,7 +116,7 @@ _stat:
 	movq	%rbx, siz(%rip)
 	ret
 
-_read:
+read:
 	movq	$READ, %rax
 	movq	fh(%rip), %rdi 		#int fd
 	movq	buffer(%rip), %rsi	#char *buf
@@ -104,7 +124,7 @@ _read:
 	syscall
 	ret
 
-_write:
+write:
 	movq	$WRITE, %rax
 	movq	$STDOUT, %rdi		#int fd
 	movq	buffer(%rip), %rsi	#char *buf
@@ -112,28 +132,28 @@ _write:
 	syscall
 	ret
 
-_close:
+close:
 	movq	$CLOSE, %rax		#close
 	leaq	fh, %rdi 		#fh
 	syscall
 	ret
 
-_munmap:
+munmap:
 	movq	$MUNMAP, %rax		#munmap
 	leaq	buffer, %rdi 		#buffer
 	movq	siz(%rip), %rsi 	#len
 	syscall
 	ret
 
-_start:
+main:
 	pushq	%rbp
 	movq	%rsp, %rbp
 
-	call	_open
-	call	_stat
-	call	_mmap
-	call	_read
-	call	_write
-	call	_close
-	call	_munmap
-	call	_exit
+	call	open
+	call	stat
+	call	mmap
+	call	read
+	call	write
+	call	close
+	call	munmap
+	call	exit

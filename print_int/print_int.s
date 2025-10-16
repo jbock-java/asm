@@ -4,6 +4,26 @@
 	.equ	WRITE, 1
 	.equ	EXIT, 60
 
+	.macro sys_enter
+	push	%rcx
+	push	%r11
+	.endm
+
+	.macro sys_leave
+	pop	%r11
+	pop	%rcx
+	.endm
+
+	.macro frame_enter
+	push	%rbp
+	mov	%rsp, %rbp
+	.endm
+
+	.macro frame_leave
+	mov	%rbp, %rsp
+	pop	%rbp
+	.endm
+
 	.text
 	.globl main
 
@@ -36,14 +56,15 @@ print_char:					# debugging
 
 # char *rsi, int rdx
 write_string:
+	sys_enter
 	mov	$WRITE, %rax
 	mov	$STDOUT, %rdi
 	syscall
+	sys_leave
 	ret
 
 print_int:
-	push	%rbp
-	mov	%rsp, %rbp
+	frame_enter
 	sub	$128, %rsp
 
 	push	%rax
@@ -96,8 +117,7 @@ print_int_pop_loop:
 	pop	%rsi
 	pop	%rax
 
-	mov	%rbp, %rsp
-	pop	%rbp
+	frame_leave
 
 	ret
 
