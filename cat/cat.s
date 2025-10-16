@@ -7,32 +7,33 @@
 	.equ EXIT, 60
 	.equ MMAP, 9
 	.equ MUNMAP, 11
-	.equ OFFSET_SIZE, 48
-	.equ CHAR_O, 0x4f
-	.equ CHAR_U, 0x55
-	.equ CHAR_C, 0x43
-	.equ CHAR_H, 0x48
-	.equ BANG, 0x21
-	.equ NEWLINE, 0xa
+	.equ OFFSET_SIZE, 48		# struct stat
 
-	.macro sys_enter
-	push	%rcx
-	push	%r11
-	.endm
-
-	.macro sys_leave
-	pop	%r11
-	pop	%rcx
-	.endm
-
-	.macro frame_enter
+	.macro enter
 	push	%rbp
 	mov	%rsp, %rbp
+	push	%rcx
+	push	%r8
+	push	%r9
+	push	%r10
+	push	%r11
+	push	%rax
+	push	%rdi
+	push	%rdx
 	.endm
 
-	.macro frame_leave
+	.macro return
+	pop	%rdx
+	pop	%rdi
+	pop	%rax
+	pop	%r11
+	pop	%r10
+	pop	%r9
+	pop	%r8
+	pop	%rcx
 	mov	%rbp, %rsp
 	pop	%rbp
+	ret
 	.endm
 
 	.data
@@ -55,100 +56,79 @@ file:
 	.globl main
 
 mmap:
-	movq	$MMAP, %rax
-	movq	$0, %rdi		#addr
-	movq	$3, %rdx		#prot r=1 w=2
-	movq	siz(%rip), %rsi 	#len
-	movq	$-1, %r8		#fd
-	movq	$0, %r9			#offset
-	movq	$34, %r10		#flags map_private=0x02, map_anonymous=0x20
+	enter
+	mov	$MMAP, %rax
+	mov	$0, %rdi		#addr
+	mov	$3, %rdx		#prot r=1 w=2
+	mov	siz(%rip), %rsi 	#len
+	mov	$-1, %r8		#fd
+	mov	$0, %r9			#offset
+	mov	$34, %r10		#flags map_private=0x02, map_anonymous=0x20
 	syscall
-	movq	%rax, buffer(%rip)	#store buffer
-	ret
+	mov	%rax, buffer(%rip)
+	return
 
 exit:
-	movq	$EXIT, %rax
-	movq	$0, %rdi
+	enter
+	mov	$EXIT, %rax
+	mov	$0, %rdi
 	syscall
-	ret
-
-print:
-	movq	$WRITE, %rax
-	pushq	%rdi			#print contents of rdi
-	movq	$STDOUT, %rdi
-	pushq	%rsp			#push leaves RSP pointing to the data that was pushed
-	popq	%rsi			#copy RSP to RSI
-	movq	$1, %rdx		#size
-	syscall
-	popq	%rdi
-	ret
-
-print_ouch:
-	movq	$CHAR_O, %rdi
-	call	print
-	movq	$CHAR_U, %rdi
-	call	print
-	movq	$CHAR_C, %rdi
-	call	print
-	movq	$CHAR_H, %rdi
-	call	print
-	movq	$BANG, %rdi
-	call	print
-	movq	$NEWLINE, %rdi
-	call	print
-	ret
+	return
 
 open:
-	movq	$OPEN, %rax
-	movq	$file, %rdi 		#filename
-	movq	$0, %rsi		#readonly
-	movq	$0644, %rdx 		#mode
+	enter
+	mov	$OPEN, %rax
+	mov	$file, %rdi
+	mov	$0, %rsi
+	mov	$0644, %rdx
 	syscall
-	movq	%rax, fh(%rip)		#store fh
-	ret
+	mov	%rax, fh(%rip)
+	return
 
 stat:
-	movq	$FSTAT, %rax
-	movq	fh(%rip), %rdi		#load fh
-	leaq	st, %rsi		#into st
+	enter
+	mov	$FSTAT, %rax
+	mov	fh(%rip), %rdi
+	lea	st, %rsi
 	syscall
-	movq	48(%rsi), %rbx		#store size
-	movq	%rbx, siz(%rip)
-	ret
+	mov	48(%rsi), %rbx
+	mov	%rbx, siz(%rip)
+	return
 
 read:
-	movq	$READ, %rax
-	movq	fh(%rip), %rdi 		#int fd
-	movq	buffer(%rip), %rsi	#char *buf
-	movq	siz(%rip), %rdx 	#len
+	enter
+	mov	$READ, %rax
+	mov	fh(%rip), %rdi
+	mov	buffer(%rip), %rsi
+	mov	siz(%rip), %rdx
 	syscall
-	ret
+	return
 
 write:
-	movq	$WRITE, %rax
-	movq	$STDOUT, %rdi		#int fd
-	movq	buffer(%rip), %rsi	#char *buf
-	movq	siz(%rip), %rdx 	#len
+	enter
+	mov	$WRITE, %rax
+	mov	$STDOUT, %rdi
+	mov	buffer(%rip), %rsi
+	mov	siz(%rip), %rdx
 	syscall
-	ret
+	return
 
 close:
-	movq	$CLOSE, %rax		#close
-	leaq	fh, %rdi 		#fh
+	enter
+	mov	$CLOSE, %rax
+	lea	fh, %rdi
 	syscall
-	ret
+	return
 
 munmap:
-	movq	$MUNMAP, %rax		#munmap
-	leaq	buffer, %rdi 		#buffer
-	movq	siz(%rip), %rsi 	#len
+	enter
+	mov	$MUNMAP, %rax
+	lea	buffer, %rdi
+	mov	siz(%rip), %rsi
 	syscall
-	ret
+	return
 
 main:
-	pushq	%rbp
-	movq	%rsp, %rbp
-
 	call	open
 	call	stat
 	call	mmap

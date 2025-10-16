@@ -9,6 +9,10 @@ draft: draft.c
 barf: draft.c
 	$(CC) $(CFLAGS) -fno-omit-frame-pointer -S $^ -o draft.s
 
+buildbarf:
+	@rm -f draft
+	$(CC) $(CFLAGS) draft.s -o draft
+
 debug: barf
 	$(CC) -o draft draft.s -g
 
