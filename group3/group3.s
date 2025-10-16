@@ -38,9 +38,9 @@
 
 fh:
 	.quad	0
-source_buffer:
+in:
 	.quad	0
-out_buffer:
+out:
 	.quad	0
 siz:
 	.quad	0
@@ -98,7 +98,7 @@ read:
 	enter
 	mov	$READ, %rax
 	mov	fh(%rip), %rdi
-	mov	source_buffer(%rip), %rsi
+	mov	in(%rip), %rsi
 	mov	siz(%rip), %rdx
 	syscall
 	return
@@ -108,11 +108,12 @@ copy:
 	mov	$0, %rcx
 	cmp	%rcx, siz(%rip)
 	je	copy_done
+	mov	in(%rip), %rsi
 copy_loop:
-	lea	source_buffer(%rip), %rsi
-	add	%rcx, %rsi
-	mov	(%rsi), %rdx
-	mov	%rdx, out_buffer(%rsi)
+	mov	%rcx, %rdx
+	add	out(%rip), %rdx
+	mov	(%rsi, %rcx), %rdi
+	movb	%dil, (%rdx)
 	inc	%rcx
 	cmp	%rcx, siz(%rip)
 	jne	copy_loop
@@ -123,7 +124,7 @@ write:
 	enter
 	mov	$WRITE, %rax
 	mov	$STDOUT, %rdi
-	mov	source_buffer(%rip), %rsi
+	mov	out(%rip), %rsi
 	mov	siz(%rip), %rdx
 	syscall
 	return
@@ -138,7 +139,11 @@ close:
 munmap:
 	enter
 	mov	$MUNMAP, %rax
-	lea	source_buffer, %rdi
+	lea	in, %rdi
+	mov	siz(%rip), %rsi
+	syscall
+	mov	$MUNMAP, %rax
+	lea	out, %rdi
 	mov	siz(%rip), %rsi
 	syscall
 	return
@@ -147,11 +152,11 @@ main:
 	call	open
 	call	stat
 	call	mmap
-	mov	%rax, source_buffer(%rip)
+	mov	%rax, in(%rip)
 	call	read
 	call	mmap
-	mov	%rax, out_buffer(%rip)
-	#call	copy	TODO
+	mov	%rax, out(%rip)
+	call	copy
 	call	write
 	call	close
 	call	munmap
