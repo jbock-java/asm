@@ -174,6 +174,7 @@ main:
 	push	line(%rip)
 	push	%rax
 	call	write_string
+	call	write_newline
 	pop	%rax
 	pop	%rax
 

@@ -52,6 +52,61 @@
 	.text
 	.globl main
 
+write_char_debug:
+	frame_enter
+	sys_enter
+	push	%rax
+	push	%rcx
+	push	%rdx
+	push	%rsi
+	push	%rdi
+	mov	16(%rbp), %rax
+	movb	$0x3e, -128(%rbp)
+	movb	%al, -127(%rbp)
+	movb	$0x3c, -126(%rbp)
+	movb	$0xa, -125(%rbp)
+	lea	-128(%rbp), %rsi
+	mov	$WRITE, %rax
+	mov	$STDOUT, %rdi
+	mov	$4, %rdx
+	syscall
+	pop	%rdi
+	pop	%rsi
+	pop	%rdx
+	pop	%rcx
+	pop	%rax
+	sys_leave
+	frame_leave
+	ret
+
+write_char:
+	enter
+	push	%rax
+	push	%rcx
+	push	%rdx
+	push	%rsi
+	push	%rdi
+	mov	16(%rbp), %rax
+	movb	%al, -64(%rbp)
+	lea	-64(%rbp), %rsi
+	mov	$WRITE, %rax
+	mov	$STDOUT, %rdi
+	mov	$1, %rdx
+	syscall
+	pop	%rdi
+	pop	%rsi
+	pop	%rdx
+	pop	%rcx
+	pop	%rax
+	return
+
+write_newline:
+	mov	%rsp, %rbp
+	push	$0xa
+	call	write_char
+	mov	%rbp, %rsp
+	ret
+
 write_string:
 	enter
 	mov	24(%rbp), %rsi		# param: address
