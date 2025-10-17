@@ -4,29 +4,19 @@
 	.equ	WRITE, 1
 	.equ	EXIT, 60
 
-	.macro sys_enter
-	push	%rcx
-	push	%r11
-	.endm
-
-	.macro sys_leave
-	pop	%r11
-	pop	%rcx
-	.endm
-
-	.macro frame_enter
-	push	%rbp
-	mov	%rsp, %rbp
-	.endm
-
-	.macro frame_leave
-	mov	%rbp, %rsp
-	pop	%rbp
-	.endm
-
 	.macro enter
 	push	%rbp
 	mov	%rsp, %rbp
+	.endm
+
+	.macro return
+	mov	%rbp, %rsp
+	pop	%rbp
+	ret
+	.endm
+
+	.macro push_all
+	push	%rbx
 	push	%rcx
 	push	%r8
 	push	%r9
@@ -36,7 +26,7 @@
 	push	%rdx
 	.endm
 
-	.macro return
+	.macro pop_all
 	pop	%rdx
 	pop	%rdi
 	pop	%r11
@@ -44,22 +34,15 @@
 	pop	%r9
 	pop	%r8
 	pop	%rcx
-	mov	%rbp, %rsp
-	pop	%rbp
-	ret
+	pop	%rbx
 	.endm
 
 	.text
 	.globl main
 
 write_char_debug:
-	frame_enter
-	sys_enter
-	push	%rax
-	push	%rcx
-	push	%rdx
-	push	%rsi
-	push	%rdi
+	enter
+	push_all
 	mov	16(%rbp), %rax
 	movb	$0x3e, -128(%rbp)
 	movb	%al, -127(%rbp)
@@ -70,22 +53,12 @@ write_char_debug:
 	mov	$STDOUT, %rdi
 	mov	$4, %rdx
 	syscall
-	pop	%rdi
-	pop	%rsi
-	pop	%rdx
-	pop	%rcx
-	pop	%rax
-	sys_leave
-	frame_leave
-	ret
+	pop_all
+	return
 
 write_char:
 	enter
-	push	%rax
-	push	%rcx
-	push	%rdx
-	push	%rsi
-	push	%rdi
+	push_all
 	mov	16(%rbp), %rax
 	movb	%al, -64(%rbp)
 	lea	-64(%rbp), %rsi
@@ -93,40 +66,37 @@ write_char:
 	mov	$STDOUT, %rdi
 	mov	$1, %rdx
 	syscall
-	pop	%rdi
-	pop	%rsi
-	pop	%rdx
-	pop	%rcx
-	pop	%rax
+	pop_all
 	return
 
 write_newline:
-	mov	%rsp, %rbp
+	enter
+	push_all
 	push	$0xa
 	call	write_char
-	mov	%rbp, %rsp
-	ret
+	pop	%rax
+	pop_all
+	return
 
 write_string:
 	enter
-	mov	24(%rbp), %rsi		# param: address
-	mov	16(%rbp), %rdx		# param: size
+	push_all
+	mov	24(%rbp), %rsi			# param: address
+	mov	16(%rbp), %rdx			# param: size
 	mov	$WRITE, %rax
 	mov	$STDOUT, %rdi
 	syscall
+	pop_all
 	return
 
 print_int:
-	frame_enter
-	sub	$128, %rsp
+	enter
 
-	push	%rax
-	push	%rsi
-	push	%rdx
-	push	%rcx
-	push	%rdi
+	mov	16(%rbp), %rsi			# param: number to print
 
-	mov	16(%rbp), %rsi
+	sub	$48, %rsp
+	push_all
+
 	mov	$0, %rcx
 
 print_int_push_loop:
@@ -137,7 +107,7 @@ print_int_push_loop:
 	jle	print_int_after_adjust
 	add	$39, %rax			# adjust for ascii "a"-"f"
 print_int_after_adjust:
-	movb	%al, -64(%rbp, %rcx)
+	movb	%al, -24(%rbp, %rcx)
 	inc	%rcx
 	shr	$4, %rsi
 	test	%rsi, %rsi
@@ -145,35 +115,29 @@ print_int_after_adjust:
 
 	mov	$0, %rdx
 
-	movb	$0x30, -96(%rbp, %rdx)
+	movb	$0x30, -48(%rbp, %rdx)
 	inc	%rdx
-	movb	$0x78, -96(%rbp, %rdx)
+	movb	$0x78, -48(%rbp, %rdx)
 	inc	%rdx
 
 print_int_pop_loop:
 	dec	%rcx
-	mov	-64(%rbp, %rcx), %rax
-	movb	%al, -96(%rbp, %rdx)
+	mov	-24(%rbp, %rcx), %rax
+	movb	%al, -48(%rbp, %rdx)
 	inc	%rdx
 	test	%rcx, %rcx
 	jnz	print_int_pop_loop
 
-	movb	$0xa, -96(%rbp, %rdx)
+	movb	$0xa, -48(%rbp, %rdx)
 	inc	%rdx
 
-	lea	-96(%rbp), %rsi
+	lea	-48(%rbp), %rsi
 	push	%rsi
 	push	%rdx
 	call	write_string
 	pop	%rdx
 	pop	%rsi
 
-	pop	%rdi
-	pop	%rcx
-	pop	%rdx
-	pop	%rsi
-	pop	%rax
+	pop_all
+	return
 
-	frame_leave
-
-	ret
