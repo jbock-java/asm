@@ -108,12 +108,12 @@ copy:
 	mov	$0, %rcx
 	cmp	%rcx, siz(%rip)
 	je	copy_done
-	mov	in(%rip), %rsi
+	mov	in(%rip), %rbx
 copy_loop:
-	mov	%rcx, %rdx
-	add	out(%rip), %rdx
-	mov	(%rsi, %rcx), %rdi
-	movb	%dil, (%rdx)
+	mov	%rcx, %rdi
+	add	out(%rip), %rdi
+	mov	(%rbx, %rcx), %rsi
+	movb	%sil, (%rdi)
 	inc	%rcx
 	cmp	%rcx, siz(%rip)
 	jne	copy_loop
