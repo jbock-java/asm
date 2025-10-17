@@ -42,7 +42,9 @@ in:
 	.quad	0
 out:
 	.quad	0
-siz:
+line:
+	.quad	0
+file_size:
 	.quad	0
 st:
 	.zero	1024
@@ -60,7 +62,7 @@ mmap:
 	mov	$MMAP, %rax
 	mov	$0, %rdi		#addr
 	mov	$3, %rdx		#prot r=1 w=2
-	mov	siz(%rip), %rsi 	#len
+	mov	file_size(%rip), %rsi 	#len
 	mov	$-1, %r8		#fd
 	mov	$0, %r9			#offset
 	mov	$34, %r10		#flags map_private=0x02, map_anonymous=0x20
@@ -91,22 +93,22 @@ stat:
 	lea	st, %rsi
 	syscall
 	mov	48(%rsi), %rbx
-	mov	%rbx, siz(%rip)
+	mov	%rbx, file_size(%rip)
 	return
 
-read:
+read_file:
 	enter
 	mov	$READ, %rax
 	mov	fh(%rip), %rdi
 	mov	in(%rip), %rsi
-	mov	siz(%rip), %rdx
+	mov	file_size(%rip), %rdx
 	syscall
 	return
 
 copy:
 	enter
 	mov	$0, %rcx
-	cmp	%rcx, siz(%rip)
+	cmp	%rcx, file_size(%rip)
 	je	copy_done
 	mov	in(%rip), %rbx
 copy_loop:
@@ -115,17 +117,56 @@ copy_loop:
 	mov	(%rbx, %rcx), %rsi
 	movb	%sil, (%rdi)
 	inc	%rcx
-	cmp	%rcx, siz(%rip)
+	cmp	%rcx, file_size(%rip)
 	jne	copy_loop
 copy_done:
 	return
 
+read_line:
+	enter
+	sub	$128, %rsp
+	mov	$0, %rcx
+	cmp	%rcx, file_size(%rip)
+	je	read_line_done
+	mov	in(%rip), %rbx
+read_line_loop:
+	mov	%rcx, %rdi
+	add	line(%rip), %rdi
+	mov	(%rbx, %rcx), %rsi
+	movb	%sil, (%rdi)
+	cmp	$0xa, %sil
+	je	read_line_done
+	inc	%rcx
+	cmp	%rcx, file_size(%rip)
+	jne	read_line_loop
+read_line_done:
+	mov	%rcx, %rax
+	return
+
+copy_lines:
+	enter
+	sub	$128, %rsp
+	mov	$0, %rcx
+	cmp	%rcx, file_size(%rip)
+	je	copy_lines_done
+	mov	in(%rip), %rbx
+copy_lines_loop:
+	mov	%rcx, %rdi
+	add	out(%rip), %rdi
+	mov	(%rbx, %rcx), %rsi
+	movb	%sil, (%rdi)
+	inc	%rcx
+	cmp	%rcx, file_size(%rip)
+	jne	copy_lines_loop
+copy_lines_done:
+	return
+
 write:
 	enter
+	mov	24(%rbp), %rsi		# param: address
+	mov	16(%rbp), %rdx		# param: size
 	mov	$WRITE, %rax
 	mov	$STDOUT, %rdi
-	mov	out(%rip), %rsi
-	mov	siz(%rip), %rdx
 	syscall
 	return
 
@@ -140,24 +181,33 @@ munmap:
 	enter
 	mov	$MUNMAP, %rax
 	lea	in, %rdi
-	mov	siz(%rip), %rsi
+	mov	file_size(%rip), %rsi
 	syscall
 	mov	$MUNMAP, %rax
 	lea	out, %rdi
-	mov	siz(%rip), %rsi
+	mov	file_size(%rip), %rsi
 	syscall
 	return
 
 main:
+	enter
 	call	open
 	call	stat
 	call	mmap
 	mov	%rax, in(%rip)
-	call	read
 	call	mmap
 	mov	%rax, out(%rip)
-	call	copy
+	call	mmap
+	mov	%rax, line(%rip)
+	call	read_file
+	#call	copy
+
+	push	in(%rip)
+	push	file_size(%rip)
 	call	write
+	pop	%rax
+	pop	%rax
+
 	call	close
 	call	munmap
 	call	exit

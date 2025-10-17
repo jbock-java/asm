@@ -92,23 +92,23 @@ print_int_after_adjust:
 
 	mov	$0, %rdx
 
-	movb	$0x30, -128(%rbp, %rdx)
+	movb	$0x30, -96(%rbp, %rdx)
 	inc	%rdx
-	movb	$0x78, -128(%rbp, %rdx)
+	movb	$0x78, -96(%rbp, %rdx)
 	inc	%rdx
 
 print_int_pop_loop:
 	dec	%rcx
 	mov	-64(%rbp, %rcx), %rax
-	movb	%al, -128(%rbp, %rdx)
+	movb	%al, -96(%rbp, %rdx)
 	inc	%rdx
 	test	%rcx, %rcx
 	jnz	print_int_pop_loop
 
-	movb	$0xa, -128(%rbp, %rdx)
+	movb	$0xa, -96(%rbp, %rdx)
 	inc	%rdx
 
-	lea	-128(%rbp), %rsi
+	lea	-96(%rbp), %rsi
 	call	write_string
 
 	pop	%rdi
