@@ -1,5 +1,5 @@
 build:
-	$(CC) print_int.s -c
+	$(CC) main.s -c -o print_int.o
 	$(LD) -e main -o print_int print_int.o
 
 run: build

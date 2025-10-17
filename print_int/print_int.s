@@ -24,44 +24,42 @@
 	pop	%rbp
 	.endm
 
+	.macro enter
+	push	%rbp
+	mov	%rsp, %rbp
+	push	%rcx
+	push	%r8
+	push	%r9
+	push	%r10
+	push	%r11
+	push	%rdi
+	push	%rdx
+	.endm
+
+	.macro return
+	pop	%rdx
+	pop	%rdi
+	pop	%r11
+	pop	%r10
+	pop	%r9
+	pop	%r8
+	pop	%rcx
+	mov	%rbp, %rsp
+	pop	%rbp
+	ret
+	.endm
+
 	.text
 	.globl main
 
-print_char:					# debugging
-	frame_enter
-	sys_enter
-	push	%rax
-	push	%rcx
-	push	%rdx
-	push	%rsi
-	push	%rdi
-	mov	16(%rbp), %rax
-	movb	$0x3e, -128(%rbp)
-	movb	%al, -127(%rbp)
-	movb	$0x3c, -126(%rbp)
-	movb	$0xa, -125(%rbp)
-	lea	-128(%rbp), %rsi
-	mov	$WRITE, %rax
-	mov	$STDOUT, %rdi
-	mov	$4, %rdx
-	syscall
-	pop	%rdi
-	pop	%rsi
-	pop	%rdx
-	pop	%rcx
-	pop	%rax
-	sys_leave
-	frame_leave
-	ret
-
-# char *rsi, int rdx
 write_string:
-	sys_enter
+	enter
+	mov	24(%rbp), %rsi		# param: address
+	mov	16(%rbp), %rdx		# param: size
 	mov	$WRITE, %rax
 	mov	$STDOUT, %rdi
 	syscall
-	sys_leave
-	ret
+	return
 
 print_int:
 	frame_enter
@@ -109,7 +107,11 @@ print_int_pop_loop:
 	inc	%rdx
 
 	lea	-96(%rbp), %rsi
+	push	%rsi
+	push	%rdx
 	call	write_string
+	pop	%rdx
+	pop	%rsi
 
 	pop	%rdi
 	pop	%rcx
@@ -120,16 +122,3 @@ print_int_pop_loop:
 	frame_leave
 
 	ret
-
-main:
-	mov	$0x9084, %rax
-	shl	$16, %rax
-	add	$0xa412, %rax
-	push	%rax
-	call	print_int
-	jmp	exit
-
-exit:
-	movq	$EXIT, %rax
-	movq	$0, %rdi
-	syscall

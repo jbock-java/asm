@@ -8,6 +8,8 @@
 
 [What is stack frame](https://stackoverflow.com/questions/3699283/what-is-stack-frame-in-assembly)
 
+[C headers in Asm](http://thomasloven.com/blog/2012/06/C-Headers-In-Asm/)
+
 ```
 /usr/include/asm-generic/fcntl.h
 ```

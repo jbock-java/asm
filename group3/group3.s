@@ -9,31 +9,6 @@
 	.equ MUNMAP, 11
 	.equ OFFSET_SIZE, 48		# struct stat
 
-	.macro enter
-	push	%rbp
-	mov	%rsp, %rbp
-	push	%rcx
-	push	%r8
-	push	%r9
-	push	%r10
-	push	%r11
-	push	%rdi
-	push	%rdx
-	.endm
-
-	.macro return
-	pop	%rdx
-	pop	%rdi
-	pop	%r11
-	pop	%r10
-	pop	%r9
-	pop	%r8
-	pop	%rcx
-	mov	%rbp, %rsp
-	pop	%rbp
-	ret
-	.endm
-
 	.data
 
 fh:
@@ -57,7 +32,9 @@ file:
 	.text
 	.globl main
 
-mmap:
+.include "../print_int/print_int.s"
+
+get_memory:
 	enter
 	mov	$MMAP, %rax
 	mov	$0, %rdi		#addr
@@ -76,7 +53,7 @@ exit:
 	syscall
 	return
 
-open:
+open_file:
 	enter
 	mov	$OPEN, %rax
 	mov	$file, %rdi
@@ -86,7 +63,7 @@ open:
 	mov	%rax, fh(%rip)
 	return
 
-stat:
+stat_file:
 	enter
 	mov	$FSTAT, %rax
 	mov	fh(%rip), %rdi
@@ -96,7 +73,7 @@ stat:
 	mov	%rbx, file_size(%rip)
 	return
 
-read_file:
+init_file:
 	enter
 	mov	$READ, %rax
 	mov	fh(%rip), %rdi
@@ -161,15 +138,6 @@ copy_lines_loop:
 copy_lines_done:
 	return
 
-write:
-	enter
-	mov	24(%rbp), %rsi		# param: address
-	mov	16(%rbp), %rdx		# param: size
-	mov	$WRITE, %rax
-	mov	$STDOUT, %rdi
-	syscall
-	return
-
 close:
 	enter
 	mov	$CLOSE, %rax
@@ -191,20 +159,21 @@ munmap:
 
 main:
 	enter
-	call	open
-	call	stat
-	call	mmap
+	call	open_file
+	call	stat_file
+	call	get_memory
 	mov	%rax, in(%rip)
-	call	mmap
+	call	get_memory
 	mov	%rax, out(%rip)
-	call	mmap
+	call	get_memory
 	mov	%rax, line(%rip)
-	call	read_file
+	call	init_file
+	call	read_line
 	#call	copy
 
-	push	in(%rip)
-	push	file_size(%rip)
-	call	write
+	push	line(%rip)
+	push	%rax
+	call	write_string
 	pop	%rax
 	pop	%rax
 
