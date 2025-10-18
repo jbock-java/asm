@@ -178,11 +178,9 @@ print_lines_loop:
 
 
 	push	linebuf(%rip)
-	push	%rax
-	call	write_string
-	pop	%rax
-	pop	%rax
-	pop	%rax
+	log	%rax
+	plop
+	plop
 
 	call	write_newline
 

@@ -9,6 +9,16 @@
 	mov	%rsp, %rbp
 	.endm
 
+	.macro plop
+	add	$8, %rsp
+	.endm
+
+	.macro log ex
+	push	\ex
+	call	write_string
+	add	$8, %rsp
+	.endm
+
 	.macro return
 	mov	%rbp, %rsp
 	pop	%rbp
