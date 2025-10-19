@@ -165,25 +165,21 @@ print_lines:
 print_lines_loop:
 
 	push	%rbx
-	log	%rbx
 	call	read_line
 
 	add	%rax, %rbx
 
-
-	push	linebuf(%rip)
-	plop
+	write	linebuf(%rip), %rax
+	writeln
 	plop
 
 
 	inc	%rbx
 
-	cmp	$30, %rbx
+	cmp	file_size(%rip), %rbx
 
 	jl	print_lines_loop
 print_lines_done:
-	push	$0x31
-	call	write_char_debug
 	pop_all
 	return
 

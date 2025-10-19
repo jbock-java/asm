@@ -13,10 +13,31 @@
 	add	$8, %rsp
 	.endm
 
+	.macro plopp
+	add	$16, %rsp
+	.endm
+
 	.macro log ex
 	push	\ex
 	call	print_int
 	add	$8, %rsp
+	.endm
+
+	.macro debug char
+	push	\char
+	call	write_char_debug
+	add	$8, %rsp
+	.endm
+
+	.macro write address size
+	push	\address
+	push	\size
+	call	write_string
+	add	$16, %rsp
+	.endm
+
+	.macro writeln
+	call	write_newline
 	.endm
 
 	.macro return
@@ -86,7 +107,7 @@ write_newline:
 	push_all
 	push	$0xa
 	call	write_char
-	pop	%rax
+	plop
 	pop_all
 	return
 
