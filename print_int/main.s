@@ -16,10 +16,7 @@ main:
 	mov	$6, %r11
 	mov	$7, %rdi
 	mov	$8, %rdx
-	mov	$255, %rsi
-
-	push	%rsi
-	log	%rsi
+	mov	$9, %rsi
 
 	log	%rax
 	log	%rbx
@@ -41,9 +38,6 @@ main:
 	log	%r11
 	log	%rdi
 	log	%rdx
-	log	%rsi
-
-	pop	%rsi
 	log	%rsi
 
 exit:

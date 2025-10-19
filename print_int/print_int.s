@@ -104,10 +104,9 @@ write_string:
 print_int:
 	enter
 
-	mov	16(%rbp), %rsi			# param: number to print
-
 	sub	$48, %rsp
 	push_all
+	mov	16(%rbp), %rsi			# param: number to print
 	push	%rax
 
 	mov	$0, %rcx

@@ -3,4 +3,4 @@ lay asm
 define hook-quit
 	set confirm off
 end
-break main
+break print_int
