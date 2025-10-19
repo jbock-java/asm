@@ -15,7 +15,7 @@
 
 	.macro log ex
 	push	\ex
-	call	write_string
+	call	print_int
 	add	$8, %rsp
 	.endm
 
@@ -26,6 +26,7 @@
 	.endm
 
 	.macro push_all
+	push	%rsi
 	push	%rbx
 	push	%rcx
 	push	%r8
@@ -45,6 +46,7 @@
 	pop	%r8
 	pop	%rcx
 	pop	%rbx
+	pop	%rsi
 	.endm
 
 	.text
@@ -106,6 +108,7 @@ print_int:
 
 	sub	$48, %rsp
 	push_all
+	push	%rax
 
 	mov	$0, %rcx
 
@@ -145,9 +148,10 @@ print_int_pop_loop:
 	push	%rsi
 	push	%rdx
 	call	write_string
-	pop	%rdx
-	pop	%rsi
+	plop
+	plop
 
+	pop	%rax
 	pop_all
 	return
 

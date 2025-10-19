@@ -1,10 +1,7 @@
 	.equ READ, 0
-	.equ STDOUT, 1
 	.equ CLOSE, 3
-	.equ WRITE, 1
 	.equ OPEN, 2
 	.equ FSTAT, 5
-	.equ EXIT, 60
 	.equ MMAP, 9
 	.equ MUNMAP, 11
 	.equ OFFSET_SIZE, 48		# struct stat
@@ -76,7 +73,7 @@ stat_file:
 	mov	fh(%rip), %rdi
 	lea	st, %rsi
 	syscall
-	mov	48(%rsi), %rbx
+	mov	OFFSET_SIZE(%rsi), %rbx
 	mov	%rbx, file_size(%rip)
 	pop_all
 	return
@@ -113,9 +110,9 @@ copy_done:
 
 read_line:
 	enter
+	sub	$128, %rsp
 	push_all
 	mov	16(%rbp), %rax
-	sub	$128, %rsp
 	mov	$0, %rcx
 	cmp	%rcx, file_size(%rip)
 	je	read_line_done
@@ -161,28 +158,23 @@ munmap:
 
 print_lines:
 	enter
-	push_all
 	sub	$128, %rsp
+	push_all
 	mov	$0, %rbx
 
 print_lines_loop:
 
 	push	%rbx
-	call	print_int
-	pop	%rbx
-
-	push	%rbx
+	log	%rbx
 	call	read_line
 
 	add	%rax, %rbx
 
 
 	push	linebuf(%rip)
-	log	%rax
 	plop
 	plop
 
-	call	write_newline
 
 	inc	%rbx
 

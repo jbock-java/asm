@@ -3,21 +3,48 @@
 
 .include "print_int.s"
 
-basic_method:
-	enter
-	sub	$144, %rsp
-	push_all
-	mov	16(%rbp), %rsi
-	mov	$0, %rcx
-	pop_all
-	return
-
 main:
 	mov	$0x9084, %rax
 	shl	$16, %rax
 	add	$0xa412, %rax
-	push	%rax
-	call	print_int
+
+	mov	$1, %rbx
+	mov	$2, %rcx
+	mov	$3, %r8
+	mov	$4, %r9
+	mov	$5, %r10
+	mov	$6, %r11
+	mov	$7, %rdi
+	mov	$8, %rdx
+	mov	$255, %rsi
+
+	push	%rsi
+	log	%rsi
+
+	log	%rax
+	log	%rbx
+	log	%rcx
+	log	%r8
+	log	%r9
+	log	%r10
+	log	%r11
+	log	%rdi
+	log	%rdx
+	log	%rsi
+
+	log	%rax
+	log	%rbx
+	log	%rcx
+	log	%r8
+	log	%r9
+	log	%r10
+	log	%r11
+	log	%rdi
+	log	%rdx
+	log	%rsi
+
+	pop	%rsi
+	log	%rsi
 
 exit:
 	movq	$EXIT, %rax
