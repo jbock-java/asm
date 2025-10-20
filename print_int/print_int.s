@@ -29,6 +29,14 @@
 	add	$8, %rsp
 	.endm
 
+	.macro memcpy source dest count
+	push	\source
+	push	\dest
+	push	\count
+	call	copymem
+	add	$24, %rsp
+	.endm
+
 	.macro write address size
 	push	\address
 	push	\size
@@ -105,20 +113,24 @@ write_char:
 write_newline:
 	enter
 	push_all
+	push	%rax
 	push	$0xa
 	call	write_char
 	plop
+	pop	%rax
 	pop_all
 	return
 
 write_string:
 	enter
 	push_all
+	push	%rax
 	mov	24(%rbp), %rsi			# param: address
 	mov	16(%rbp), %rdx			# param: size
 	mov	$WRITE, %rax
 	mov	$STDOUT, %rdi
 	syscall
+	pop	%rax
 	pop_all
 	return
 
@@ -175,3 +187,23 @@ print_int_pop_loop:
 	pop_all
 	return
 
+copymem:
+	enter
+	push_all
+	push	%rax
+	mov	32(%rbp), %rsi			# param: source
+	mov	24(%rbp), %rdi			# param: destination
+	mov	16(%rbp), %rdx			# param: count
+	mov	$0, %rcx
+	test	%rdx, %rdx
+	jz	copymem_done
+copymem_loop:
+	mov	(%rsi, %rcx), %rax
+	movb	%al, (%rdi, %rcx)
+	inc	%rcx
+	cmp	%rcx, %rdx
+	jne	copymem_loop
+copymem_done:
+	pop	%rax
+	pop_all
+	return

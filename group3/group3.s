@@ -169,6 +169,8 @@ print_lines_loop:
 
 	add	%rax, %rbx
 
+	write	linebuf(%rip), $3
+	writeln
 	write	linebuf(%rip), %rax
 	writeln
 	plop
