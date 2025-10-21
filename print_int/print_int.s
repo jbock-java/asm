@@ -37,6 +37,14 @@
 	add	$24, %rsp
 	.endm
 
+	.macro strcmp s1 s2 count
+	push	\s1
+	push	\s2
+	push	\count
+	call	string_compare
+	add	$24, %rsp
+	.endm
+
 	.macro write address size
 	push	\address
 	push	\size
@@ -191,9 +199,9 @@ copymem:
 	enter
 	push_all
 	push	%rax
-	mov	32(%rbp), %rsi			# param: source
-	mov	24(%rbp), %rdi			# param: destination
-	mov	16(%rbp), %rdx			# param: count
+	mov	32(%rbp), %rsi			# char *source
+	mov	24(%rbp), %rdi			# char *destination
+	mov	16(%rbp), %rdx			# int count
 	mov	$0, %rcx
 	test	%rdx, %rdx
 	jz	copymem_done
@@ -205,5 +213,32 @@ copymem_loop:
 	jne	copymem_loop
 copymem_done:
 	pop	%rax
+	pop_all
+	return
+
+string_compare:
+	enter
+	push_all
+	mov	32(%rbp), %rsi			# char *s1
+	mov	24(%rbp), %rdi			# char *s2
+	mov	16(%rbp), %rdx			# int count
+	mov	$0, %rcx
+	test	%rdx, %rdx
+	jz	string_compare_ret0
+string_compare_loop:
+	mov	(%rsi, %rcx), %rax
+	mov	(%rdi, %rcx), %rbx
+	cmp	%al, %bl
+	jne	string_compare_ret1
+	inc	%rcx
+	cmp	%rcx, %rdx
+	je	string_compare_ret0
+	jmp	string_compare_loop
+string_compare_ret1:
+	mov	$1, %rax
+	jmp	string_compare_done
+string_compare_ret0:
+	mov	$0, %rax
+string_compare_done:
 	pop_all
 	return
