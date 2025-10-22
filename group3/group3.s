@@ -10,7 +10,7 @@
 
 fh:
 	.quad	0
-in:					# address of in buffer
+inbuf:					# address of in buffer
 	.quad	0
 out:					# address of out buffer
 	.quad	0
@@ -89,7 +89,7 @@ init_file:
 	push_all
 	mov	$READ, %rax
 	mov	fh(%rip), %rdi
-	mov	in(%rip), %rsi
+	mov	inbuf(%rip), %rsi
 	mov	file_size(%rip), %rdx
 	syscall
 	pop_all
@@ -101,7 +101,7 @@ copy:
 	mov	$0, %rcx
 	cmp	%rcx, file_size(%rip)
 	je	copy_done
-	mov	in(%rip), %rbx
+	mov	inbuf(%rip), %rbx
 copy_loop:
 	mov	%rcx, %rdi
 	add	out(%rip), %rdi
@@ -114,8 +114,8 @@ copy_done:
 	pop_all
 	return
 
-# read line from in into linebuf
-# return length in %rax
+# read line (excluding newline) from inbuf into linebuf, starting at given offset
+# return number of characters read in %rax
 read_line:
 	enter
 	sub	$128, %rsp
@@ -124,7 +124,7 @@ read_line:
 	mov	$0, %rcx
 	cmp	%rcx, file_size(%rip)
 	je	read_line_done
-	mov	in(%rip), %rbx
+	mov	inbuf(%rip), %rbx
 	add	%rax, %rbx
 read_line_loop:
 	mov	%rcx, %rdi
@@ -154,7 +154,7 @@ munmap:
 	enter
 	push_all
 	mov	$MUNMAP, %rax
-	lea	in, %rdi
+	lea	inbuf, %rdi
 	mov	file_size(%rip), %rsi
 	syscall
 	mov	$MUNMAP, %rax
@@ -165,36 +165,40 @@ munmap:
 	return
 
 
-
+# tmp = '___'
+# with open('data.txt') as file:
+#     while line := file.readline():
+#         if not line.startswith(tmp):
+#             print(line[:3])
+#         tmp = line[:3]
+#         print('\t' + line.rstrip()[3:])
 print_lines:
 	enter
 	sub	$128, %rsp
 	push_all
-	mov	$0, %rbx			# input offset
+	mov	$0, %rbx			# int offset (offset in inbuf)
 	mov	linebuf(%rip), %rsi
 	mov	%rbp, %rdi
-	sub 	$64, %rdi			# tmp
-
+	sub 	$64, %rdi			# char tmp[3] (start of previous line)
 print_lines_loop:
-
-	readln	%rbx
-
-	# compare linebuf and tmp, store result in %r9
+	readln	%rbx				# read line into linebuf
+						# %rax now contains the length
 	push	%rax
-	strcmp	%rsi, %rdi, $3
+	strcmp	%rsi, %rdi, $3			# check linebuf.startswith(tmp), move result to %r9
 	mov	%rax, %r9
 	pop	%rax
-
-	memcpy	%rsi, %rdi, $3
-
-	add	%rax, %rbx
-
+	memcpy	%rsi, %rdi, $3			# update tmp
+	add	%rax, %rbx			# add length to offset (this skips the newline)
 	test	%r9, %r9
 	jz	print_lines_write_line
 	write	linebuf(%rip), $3
 	writeln
 print_lines_write_line:
-	write	linebuf(%rip), %rax
+	mov	linebuf(%rip), %r10
+	add	$2, %r10			# skip two chars from linebuf
+	movb	$0x9, (%r10)			# replace third char with a tab
+	sub	$2, %rax
+	write	%r10, %rax
 	writeln
 	inc	%rbx
 	cmp	file_size(%rip), %rbx
@@ -211,7 +215,7 @@ main:
 	call	open_file
 	call	stat_file
 	call	get_memory
-	mov	%rax, in(%rip)
+	mov	%rax, inbuf(%rip)
 	call	get_memory
 	mov	%rax, out(%rip)
 	call	get_memory

@@ -144,13 +144,11 @@ write_string:
 
 print_int:
 	enter
-
 	sub	$48, %rsp
 	push_all
-	mov	16(%rbp), %rsi			# param: number to print
 	push	%rax
-
-	mov	$0, %rcx
+	mov	16(%rbp), %rsi			# int n
+	mov	$0, %rcx			# int count
 
 print_int_push_loop:
 	mov	%rsi, %rax
@@ -185,11 +183,7 @@ print_int_pop_loop:
 	inc	%rdx
 
 	lea	-48(%rbp), %rsi
-	push	%rsi
-	push	%rdx
-	call	write_string
-	plop
-	plop
+	write	%rsi, %rdx
 
 	pop	%rax
 	pop_all
