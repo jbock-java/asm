@@ -10,9 +10,9 @@
 
 fh:
 	.quad	0
-in:
+in:					# address of in buffer
 	.quad	0
-out:
+out:					# address of out buffer
 	.quad	0
 linebuf:
 	.quad	0
@@ -30,6 +30,12 @@ file:
 	.globl main
 
 .include "../print_int/print_int.s"
+
+	.macro readln off
+	push	\off
+	call	read_line
+	add	$8, %rsp
+	.endm
 
 get_memory:
 	enter
@@ -108,11 +114,13 @@ copy_done:
 	pop_all
 	return
 
+# read line from in into linebuf
+# return length in %rax
 read_line:
 	enter
 	sub	$128, %rsp
 	push_all
-	mov	16(%rbp), %rax
+	mov	16(%rbp), %rax			# int offset
 	mov	$0, %rcx
 	cmp	%rcx, file_size(%rip)
 	je	read_line_done
@@ -156,34 +164,46 @@ munmap:
 	pop_all
 	return
 
+
+
 print_lines:
 	enter
 	sub	$128, %rsp
 	push_all
-	mov	$0, %rbx
+	mov	$0, %rbx			# input offset
+	mov	linebuf(%rip), %rsi
+	mov	%rbp, %rdi
+	sub 	$64, %rdi			# tmp
 
 print_lines_loop:
 
-	push	%rbx
-	call	read_line
+	readln	%rbx
+
+	# compare linebuf and tmp, store result in %r9
+	push	%rax
+	strcmp	%rsi, %rdi, $3
+	mov	%rax, %r9
+	pop	%rax
+
+	memcpy	%rsi, %rdi, $3
 
 	add	%rax, %rbx
 
+	test	%r9, %r9
+	jz	print_lines_write_line
 	write	linebuf(%rip), $3
 	writeln
+print_lines_write_line:
 	write	linebuf(%rip), %rax
 	writeln
-	plop
-
-
 	inc	%rbx
-
 	cmp	file_size(%rip), %rbx
-
 	jl	print_lines_loop
 print_lines_done:
 	pop_all
 	return
+
+
 
 main:
 	enter
@@ -198,11 +218,6 @@ main:
 	mov	%rax, linebuf(%rip)
 	call	init_file
 	call	print_lines
-	#push	$0xc
-	#call	read_line
-	#push	linebuf(%rip)
-	#push	%rax
-	#call	write_string
 
 	call	close
 	call	munmap
