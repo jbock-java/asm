@@ -10,6 +10,8 @@
 
 [Linux clobbered registers](https://stackoverflow.com/questions/69515893/when-does-linux-x86-64-syscall-clobber-r8-r9-and-r10)
 
+[Calling printf in x86_64 using GNU assembler](https://stackoverflow.com/questions/38335212/calling-printf-in-x86-64-using-gnu-assembler)
+
 ```
 /usr/include/asm-generic/fcntl.h
 ```

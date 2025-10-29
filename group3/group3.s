@@ -51,6 +51,15 @@ get_memory:
 	pop_all
 	return
 
+sflush:
+	enter
+	push_all
+	xor	%eax, %eax
+	mov	stdout(%rip), %rdi
+	syscall
+	pop_all
+	return
+
 exit:
 	enter
 	push_all
@@ -222,6 +231,7 @@ main:
 	mov	%rax, linebuf(%rip)
 	call	init_file
 	call	print_lines
+	call 	sflush
 
 	call	close
 	call	munmap

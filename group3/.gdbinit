@@ -3,4 +3,4 @@ lay asm
 define hook-quit
 	set confirm off
 end
-break print_lines_loop
+break write_string

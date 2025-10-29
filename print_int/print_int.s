@@ -86,6 +86,9 @@
 	pop	%rsi
 	.endm
 
+	.data
+	format: .asciz "%.*s"
+
 	.text
 	.globl main
 
@@ -133,11 +136,11 @@ write_string:
 	enter
 	push_all
 	push	%rax
-	mov	24(%rbp), %rsi			# param: address
-	mov	16(%rbp), %rdx			# param: size
-	mov	$WRITE, %rax
-	mov	$STDOUT, %rdi
-	syscall
+	lea	format(%rip), %rdi
+	mov	24(%rbp), %rdx			# param: address
+	mov	16(%rbp), %rsi			# param: size
+	mov	$2, %al				# number of vector arguments
+	call	printf
 	pop	%rax
 	pop_all
 	return
