@@ -33,6 +33,7 @@ main:
 	mov	$2, %rax
 	strcmp	%rdi, %rsi, $3
 	log 	%rax
+	call	flush
 	call	exit
 
 exit:

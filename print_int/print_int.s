@@ -86,8 +86,20 @@
 	pop	%rsi
 	.endm
 
+	.data
+	format: .asciz "%.*s\n"
+
 	.text
 	.globl main
+
+flush:
+	enter
+	push_all
+	xor	%eax, %eax
+	mov	stdout(%rip), %rdi
+	call	fflush
+	pop_all
+	return
 
 write_char_debug:
 	enter
@@ -133,11 +145,11 @@ write_string:
 	enter
 	push_all
 	push	%rax
-	mov	24(%rbp), %rsi			# param: address
-	mov	16(%rbp), %rdx			# param: size
-	mov	$WRITE, %rax
-	mov	$STDOUT, %rdi
-	syscall
+	lea	format(%rip), %rdi
+	mov	24(%rbp), %rdx			# param: address
+	mov	16(%rbp), %rsi			# param: size
+	mov	$0, %rax			# number of vector arguments
+	call	printf
 	pop	%rax
 	pop_all
 	return
@@ -178,9 +190,6 @@ print_int_pop_loop:
 	inc	%rdx
 	test	%rcx, %rcx
 	jnz	print_int_pop_loop
-
-	movb	$0xa, -48(%rbp, %rdx)
-	inc	%rdx
 
 	lea	-48(%rbp), %rsi
 	write	%rsi, %rdx

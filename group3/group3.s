@@ -145,7 +145,7 @@ close:
 	enter
 	push_all
 	mov	$CLOSE, %rax
-	lea	fh, %rdi
+	mov	fh, %rdi
 	syscall
 	pop_all
 	return
@@ -154,11 +154,11 @@ munmap:
 	enter
 	push_all
 	mov	$MUNMAP, %rax
-	lea	inbuf, %rdi
+	mov	inbuf, %rdi
 	mov	file_size(%rip), %rsi
 	syscall
 	mov	$MUNMAP, %rax
-	lea	out, %rdi
+	mov	out, %rdi
 	mov	file_size(%rip), %rsi
 	syscall
 	pop_all
@@ -192,14 +192,12 @@ print_lines_loop:
 	test	%r9, %r9
 	jz	print_lines_write_line
 	write	linebuf(%rip), $3
-	writeln
 print_lines_write_line:
 	mov	linebuf(%rip), %r10
 	add	$2, %r10			# skip two chars from linebuf
 	movb	$0x9, (%r10)			# replace third char with a tab
 	sub	$2, %rax
 	write	%r10, %rax
-	writeln
 	inc	%rbx
 	cmp	file_size(%rip), %rbx
 	jl	print_lines_loop
@@ -222,6 +220,7 @@ main:
 	mov	%rax, linebuf(%rip)
 	call	init_file
 	call	print_lines
+	call 	flush
 
 	call	close
 	call	munmap

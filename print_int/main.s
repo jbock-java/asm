@@ -40,6 +40,9 @@ main:
 	log	%rdx
 	log	%rsi
 
+	call	flush
+	call	exit
+
 exit:
 	movq	$EXIT, %rax
 	movq	$0, %rdi
