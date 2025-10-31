@@ -1,3 +1,4 @@
+#include <sys/syscall.h>
 	.text
 	.globl main
 
@@ -44,6 +45,6 @@ main:
 	call	exit
 
 exit:
-	movq	$EXIT, %rax
-	movq	$0, %rdi
+	mov	$SYS_exit_group, %rax
+	mov	$0, %rdi
 	syscall

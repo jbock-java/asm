@@ -10,6 +10,8 @@
 
 [Linux clobbered registers](https://stackoverflow.com/questions/69515893/when-does-linux-x86-64-syscall-clobber-r8-r9-and-r10)
 
+[Including header in assembly](https://stackoverflow.com/questions/60192138/including-header-file-in-assembly-file)
+
 ```
 /usr/include/asm-generic/fcntl.h
 ```

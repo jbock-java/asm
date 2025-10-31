@@ -1,9 +1,4 @@
-	.equ READ, 0
-	.equ CLOSE, 3
-	.equ OPEN, 2
-	.equ FSTAT, 5
-	.equ MMAP, 9
-	.equ MUNMAP, 11
+#include <sys/syscall.h>
 	.equ OFFSET_SIZE, 48		# struct stat
 
 	.data
@@ -40,7 +35,7 @@ file:
 get_memory:
 	enter
 	push_all
-	mov	$MMAP, %rax
+	mov	$SYS_mmap, %rax
 	mov	$0, %rdi		#addr
 	mov	$3, %rdx		#prot r=1 w=2
 	mov	file_size(%rip), %rsi 	#len
@@ -63,7 +58,7 @@ exit:
 open_file:
 	enter
 	push_all
-	mov	$OPEN, %rax
+	mov	$SYS_open, %rax
 	mov	$file, %rdi
 	mov	$0, %rsi
 	mov	$0644, %rdx
@@ -75,7 +70,7 @@ open_file:
 stat_file:
 	enter
 	push_all
-	mov	$FSTAT, %rax
+	mov	$SYS_fstat, %rax
 	mov	fh(%rip), %rdi
 	lea	st, %rsi
 	syscall
@@ -87,7 +82,7 @@ stat_file:
 init_file:
 	enter
 	push_all
-	mov	$READ, %rax
+	mov	$SYS_read, %rax
 	mov	fh(%rip), %rdi
 	mov	inbuf(%rip), %rsi
 	mov	file_size(%rip), %rdx
@@ -144,7 +139,7 @@ read_line_done:
 close:
 	enter
 	push_all
-	mov	$CLOSE, %rax
+	mov	$SYS_close, %rax
 	mov	fh, %rdi
 	syscall
 	pop_all
@@ -153,11 +148,11 @@ close:
 munmap:
 	enter
 	push_all
-	mov	$MUNMAP, %rax
+	mov	$SYS_munmap, %rax
 	mov	inbuf, %rdi
 	mov	file_size(%rip), %rsi
 	syscall
-	mov	$MUNMAP, %rax
+	mov	$SYS_munmap, %rax
 	mov	out, %rdi
 	mov	file_size(%rip), %rsi
 	syscall
@@ -165,13 +160,13 @@ munmap:
 	return
 
 
-# tmp = '___'
-# with open('data.txt') as file:
-#     while line := file.readline():
-#         if not line.startswith(tmp):
-#             print(line[:3])
-#         tmp = line[:3]
-#         print('\t' + line.rstrip()[3:])
+#. tmp = '___'
+#. with open('data.txt') as file:
+#.     while line := file.readline():
+#.         if not line.startswith(tmp):
+#.             print(line[:3])
+#.         tmp = line[:3]
+#.         print('\t' + line.rstrip()[3:])
 print_lines:
 	enter
 	sub	$128, %rsp
